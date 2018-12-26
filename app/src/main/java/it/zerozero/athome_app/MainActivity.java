@@ -63,8 +63,9 @@ public class MainActivity extends Activity {
     private int[] ledColorsAr = new int[RainbowHat.LEDSTRIP_LENGTH];
     public final int WARM_WHITE = Color.rgb(72, 36, 6);
     private Gpio ledRed;
-    private long updateSecondSeconds = 0;
+    protected long updateSecondSeconds = 0;
     private static Thread serverThread;
+    private NsdHelper nsdHelper;
 
     static {
         System.loadLibrary("native-lib");
@@ -225,6 +226,14 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        nsdHelper = new NsdHelper(getApplicationContext());
+        nsdHelper.initializeRegistrationListener();
+        nsdHelper.registerService(19881);
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
 
@@ -264,6 +273,8 @@ public class MainActivity extends Activity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        nsdHelper.tearDown();
     }
 
     @Override
