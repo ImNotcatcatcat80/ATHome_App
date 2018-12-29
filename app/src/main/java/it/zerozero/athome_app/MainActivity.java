@@ -3,12 +3,14 @@ package it.zerozero.athome_app;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.support.customtabs.CustomTabsIntent;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -29,6 +31,7 @@ import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Skeleton of an Android Things activity.
@@ -53,6 +56,7 @@ public class MainActivity extends Activity {
 
     private TextView textViewIP;
     private Button buttonPerActiv;
+    private Button buttonBrowser;
     private Runnable updateSecond;
     private Handler updateSecondHandler;
     private Handler serverHandler;
@@ -173,6 +177,23 @@ public class MainActivity extends Activity {
             public void onClick(View view) {
                 Intent perActivIntent = new Intent(getApplicationContext(), PeripheralActivity0.class);
                 startActivity(perActivIntent);
+            }
+        });
+        buttonBrowser = findViewById(R.id.buttonBrowser);
+        buttonBrowser.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String url = "http://www.google.com";
+                CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
+                builder.setToolbarColor(000000);
+                builder.setShowTitle(true);
+
+                CustomTabsIntent customTabsIntent = builder.build();
+                try {
+                    customTabsIntent.launchUrl(MainActivity.this, Uri.parse(url));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
 

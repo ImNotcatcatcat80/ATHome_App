@@ -2,6 +2,7 @@
 <android.support.constraint.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -30,4 +31,16 @@
         android:text="textViewBottom"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/buttonDisplay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@android:color/black"
+        android:text=" Display 0x3C "
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toEndOf="@+id/editText0"
+        app:layout_constraintStart_toStartOf="@+id/editText0"
+        app:layout_constraintTop_toBottomOf="@+id/editText0" />
 </android.support.constraint.ConstraintLayout>

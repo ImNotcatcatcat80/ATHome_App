@@ -23,11 +23,11 @@ public class NsdHelper {
         mNsdManager = (NsdManager) mContext.getSystemService(Context.NSD_SERVICE);
     }
 
-    public void registerService(int port) {
+    public void registerService(int inPort) {
         NsdServiceInfo serviceInfo = new NsdServiceInfo();
+        serviceInfo.setPort(inPort);
         serviceInfo.setServiceName(mServiceName);
         serviceInfo.setServiceType(NSD_SERVICE_TYPE);
-        serviceInfo.setPort(port);
 
         mNsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD, mRegistrationListener);
     }
@@ -60,6 +60,7 @@ public class NsdHelper {
             public void onServiceRegistered(NsdServiceInfo nsdServiceInfo) {
                 mServiceName = nsdServiceInfo.getServiceName();
                 Log.d("NsdHelper", "Service registered with name " + mServiceName);
+                Log.i("NsdHelper", "port " + String.valueOf(nsdServiceInfo.getPort()));
             }
 
             @Override
