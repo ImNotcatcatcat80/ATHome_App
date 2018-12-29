@@ -6,6 +6,7 @@ import android.net.nsd.NsdServiceInfo;
 import android.util.Log;
 
 import java.net.InetAddress;
+import java.util.Locale;
 
 public class NsdHelper {
 
@@ -14,8 +15,7 @@ public class NsdHelper {
     NsdManager.DiscoveryListener mDiscoveryListener;
     NsdManager.ResolveListener mResolveListener;
     NsdManager.RegistrationListener mRegistrationListener;
-    String mServiceInfo;
-    public final String NSD_SERVICE_NAME = "ATHome_App";
+    public String mServiceName = "ATHome_App";
     public final String NSD_SERVICE_TYPE =  "_athomeapp._tcp";
 
     public NsdHelper(Context context) {
@@ -25,7 +25,7 @@ public class NsdHelper {
 
     public void registerService(int port) {
         NsdServiceInfo serviceInfo = new NsdServiceInfo();
-        serviceInfo.setServiceName(NSD_SERVICE_NAME);
+        serviceInfo.setServiceName(mServiceName);
         serviceInfo.setServiceType(NSD_SERVICE_TYPE);
         serviceInfo.setPort(port);
 
@@ -58,8 +58,8 @@ public class NsdHelper {
 
             @Override
             public void onServiceRegistered(NsdServiceInfo nsdServiceInfo) {
-                mServiceInfo = nsdServiceInfo.getServiceName();
-                Log.d("NsdHelper", "Service registered.");
+                mServiceName = nsdServiceInfo.getServiceName();
+                Log.d("NsdHelper", "Service registered with name " + mServiceName);
             }
 
             @Override
@@ -110,16 +110,16 @@ public class NsdHelper {
 
             @Override
             public void onServiceFound(NsdServiceInfo serviceInfo) {
-                Log.d("NsdHelper", "Service found.");
+                Log.d("NsdHelper", String.format(Locale.ITALIAN, "service found %s %s %s", String.valueOf(serviceInfo.getPort()), serviceInfo.getServiceName(), serviceInfo.getServiceType()));
                 if (!serviceInfo.getServiceType().equals(NSD_SERVICE_TYPE)) {
                     // Service type is the string containing the protocol and
                     // transport layer for this service.
                     Log.d("NsdHelper", "Unknown Service Type: " + serviceInfo.getServiceType());
-                } else if (serviceInfo.getServiceName().equals(NSD_SERVICE_NAME)) {
+                } else if (serviceInfo.getServiceName().equals(mServiceName)) {
                     // The name of the service tells the user what they'd be
                     // connecting to. It could be "Bob's Chat App".
-                    Log.d("NsdHelper", "Same machine: " + NSD_SERVICE_NAME);
-                } else if (serviceInfo.getServiceName().contains(NSD_SERVICE_NAME)){
+                    Log.d("NsdHelper", "Same machine: " + mServiceName);
+                } else if (serviceInfo.getServiceName().contains(mServiceName)){
                     mNsdManager.resolveService(serviceInfo, mResolveListener);
                 }
             }
