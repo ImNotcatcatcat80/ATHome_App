@@ -57,6 +57,7 @@ public class MainActivity extends Activity {
     private TextView textViewIP;
     private Button buttonPerActiv;
     private Button buttonBrowser;
+    private com.google.android.things.contrib.driver.button.Button buttonB;
     private Runnable updateSecond;
     private Handler updateSecondHandler;
     private Handler serverHandler;
@@ -67,9 +68,11 @@ public class MainActivity extends Activity {
     private int[] ledColorsAr = new int[RainbowHat.LEDSTRIP_LENGTH];
     public final int WARM_WHITE = Color.rgb(72, 36, 6);
     private Gpio ledRed;
+    private Gpio ledGreen;
     protected long updateSecondSeconds = 0;
     private static Thread serverThread;
     private NsdHelper nsdHelper;
+    private String displayIpAddress = "init.more";
 
     static {
         System.loadLibrary("native-lib");
@@ -114,7 +117,7 @@ public class MainActivity extends Activity {
                     e.printStackTrace();
                 }
 
-                if (updateSecondSeconds % 30 == 0) {
+                if (updateSecondSeconds % 60 == 0) {
                     RunningDash runningDash = new RunningDash();
                     runningDash.execute();
                     Log.i("updateSecondSeconds", String.valueOf(updateSecondSeconds));
@@ -210,6 +213,7 @@ public class MainActivity extends Activity {
 
         try {
             ledRed = RainbowHat.openLedRed();
+            ledGreen = RainbowHat.openLedGreen();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -244,6 +248,22 @@ public class MainActivity extends Activity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        try {
+            buttonB = RainbowHat.openButtonB();
+            buttonB.setOnButtonEventListener(new com.google.android.things.contrib.driver.button.Button.OnButtonEventListener() {
+                @Override
+                public void onButtonEvent(com.google.android.things.contrib.driver.button.Button button, boolean pressed) {
+                    if(pressed) {
+                        ScrollIp scrollIp = new ScrollIp();
+                        scrollIp.execute();
+                    }
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     @Override
@@ -261,10 +281,16 @@ public class MainActivity extends Activity {
         updateSecondHandler.removeCallbacks(updateSecond);
 
         try {
-            ledRed.setValue(false);
-            ledRed.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            if (ledRed != null) {
+                ledRed.setValue(false);
+                ledRed.close();
+            }
+            if (ledGreen != null) {
+                ledGreen.setValue(false);
+                ledGreen.close();
+            }
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
         }
 
         try {
@@ -295,6 +321,14 @@ public class MainActivity extends Activity {
             e.printStackTrace();
         }
 
+        try {
+            buttonB.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            buttonB = null;
+        }
+
         nsdHelper.tearDown();
     }
 
@@ -314,16 +348,18 @@ public class MainActivity extends Activity {
 
         try {
             ledRed.close();
+            ledGreen.close();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             ledRed = null;
+            ledGreen = null;
         }
     }
 
     public native String stringFromJNI();
 
-    public static ArrayList<String> getIPAddresses(boolean useIPv4) {
+    public ArrayList<String> getIPAddresses(boolean useIPv4) {
         ArrayList<String> ipAddressList = new ArrayList<>();
         try {
             List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
@@ -334,6 +370,7 @@ public class MainActivity extends Activity {
                         String sAddr = addr.getHostAddress();
                         String sIfName = intf.getDisplayName();
                         //boolean isIPv4 = InetAddressUtils.isIPv4Address(sAddr);
+                        displayIpAddress = sAddr;
                         boolean isIPv4 = sAddr.indexOf(':')<0;
 
                         if (useIPv4) {
@@ -450,4 +487,54 @@ public class MainActivity extends Activity {
 
     }
 
+    public class ScrollIp extends AsyncTask {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            if(ledGreen != null) {
+                try {
+                    ledGreen.setValue(true);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        @Override
+        protected Object doInBackground(Object[] objects) {
+            if (displayIpAddress != null) {
+                Log.i("displayIpAddress", displayIpAddress);
+                String[] octet = displayIpAddress.split(".");
+                for(String o : octet) {
+                    Log.i("octet", o);
+                }
+            }
+            else {
+                Log.i("displayIpAddress", "null");
+            }
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Object[] values) {
+            super.onProgressUpdate(values);
+        }
+
+        @Override
+        protected void onPostExecute(Object o) {
+            super.onPostExecute(o);
+            if(ledGreen != null) {
+                try {
+                    ledGreen.setValue(false);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 }
