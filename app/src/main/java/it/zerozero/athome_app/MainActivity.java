@@ -69,6 +69,7 @@ public class MainActivity extends Activity {
     public final int WARM_WHITE = Color.rgb(72, 36, 6);
     private Gpio ledRed;
     private Gpio ledGreen;
+    private Gpio ledBlue;
     protected long updateSecondSeconds = 0;
     private static Thread serverThread;
     private NsdHelper nsdHelper;
@@ -110,15 +111,15 @@ public class MainActivity extends Activity {
                 updateSecondSeconds++;
 
                 try {
-                    if (ledRed != null) {
-                        ledRed.setValue(!ledRed.getValue());
+                    if (ledBlue != null) {
+                        ledBlue.setValue(!ledBlue.getValue());
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
 
                 if (updateSecondSeconds % 60 == 0) {
-                    RunningDash runningDash = new RunningDash();
+                    RunningDash runningDash = new RunningDash(display, ledStrip, ledColorsAr);
                     runningDash.execute();
                     Log.i("updateSecondSeconds", String.valueOf(updateSecondSeconds));
                 }
@@ -212,7 +213,7 @@ public class MainActivity extends Activity {
         updateSecondHandler.post(updateSecond);
 
         try {
-            ledRed = RainbowHat.openLedRed();
+            ledBlue = RainbowHat.openLedBlue();
             ledGreen = RainbowHat.openLedGreen();
         } catch (IOException e) {
             e.printStackTrace();
@@ -281,9 +282,9 @@ public class MainActivity extends Activity {
         updateSecondHandler.removeCallbacks(updateSecond);
 
         try {
-            if (ledRed != null) {
-                ledRed.setValue(false);
-                ledRed.close();
+            if (ledBlue != null) {
+                ledBlue.setValue(false);
+                ledBlue.close();
             }
             if (ledGreen != null) {
                 ledGreen.setValue(false);
@@ -347,12 +348,12 @@ public class MainActivity extends Activity {
         }
 
         try {
-            ledRed.close();
+            ledBlue.close();
             ledGreen.close();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            ledRed = null;
+            ledBlue = null;
             ledGreen = null;
         }
     }
@@ -390,13 +391,24 @@ public class MainActivity extends Activity {
         return ipAddressList;
     }
 
-    public class RunningDash extends AsyncTask {
+    public static class RunningDash extends AsyncTask {
+
+        private AlphanumericDisplay mDisplay;
+        private Apa102 mLedStrip;
+        private int[] mLedArray;
+
+        public RunningDash(AlphanumericDisplay mDisplay, Apa102 mLedStrip, int[] mLedArray) {
+            this.mDisplay = mDisplay;
+            this.mLedStrip = mLedStrip;
+            this.mLedArray = mLedArray;
+        }
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            if (display != null) {
+            if (mDisplay != null) {
                 try {
-                    display.clear();
+                    mDisplay.clear();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -429,33 +441,33 @@ public class MainActivity extends Activity {
             }
             */
 
-            if(display != null) {
+            if(mDisplay != null) {
                 try {
-                    display.display("-   ");
+                    mDisplay.display("-   ");
                     try {
                         Thread.sleep(200);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    display.display(" -  ");
+                    mDisplay.display(" -  ");
                     try {
                         Thread.sleep(200);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    display.display("  - ");
+                    mDisplay.display("  - ");
                     try {
                         Thread.sleep(200);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    display.display("   -");
+                    mDisplay.display("   -");
                     try {
                         Thread.sleep(200);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    display.display("    ");
+                    mDisplay.display("    ");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -463,9 +475,9 @@ public class MainActivity extends Activity {
 
             try {
                 for (int led = 0; led < RainbowHat.LEDSTRIP_LENGTH; led++) {
-                    ledColorsAr[led] = Color.BLACK;
+                    mLedArray[led] = Color.BLACK;
                 }
-                ledStrip.write(ledColorsAr);
+                mLedStrip.write(mLedArray);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -476,9 +488,9 @@ public class MainActivity extends Activity {
         @Override
         protected void onPostExecute(Object o) {
             super.onPostExecute(o);
-            if (display != null) {
+            if (mDisplay != null) {
                 try {
-                    display.clear();
+                    mDisplay.clear();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
