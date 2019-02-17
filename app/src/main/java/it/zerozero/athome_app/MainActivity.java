@@ -1,16 +1,19 @@
 package it.zerozero.athome_app;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
-import android.net.Uri;
+import android.net.wifi.ScanResult;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.support.customtabs.CustomTabsIntent;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -55,13 +58,16 @@ import java.util.Locale;
 public class MainActivity extends Activity {
 
     private TextView textViewIP;
+    private TextView textViewBottom;
     private Button buttonPerActiv;
-    private Button buttonBrowser;
+    private Button buttonWifi;
     private com.google.android.things.contrib.driver.button.Button buttonB;
     private Runnable updateSecond;
     private Handler updateSecondHandler;
     private Handler serverHandler;
     private WifiManager wifiManager;
+    private BroadcastReceiver wifiScanReceiver;
+    private WifiConfiguration wifiConfig;
     private AlphanumericDisplay display;
     private Bmx280 sensor;
     private Apa102 ledStrip;
@@ -85,6 +91,29 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        if (wifiManager != null) {
+            wifiManager.startScan();
+        }
+        wifiScanReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                boolean scanSuccess = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false);
+                if (scanSuccess) {
+                    Log.d("Wifi scan", "scan successful.");
+                    List<ScanResult> wifiNetworks = wifiManager.getScanResults();
+                    for (int r = 0; r <= wifiNetworks.size() - 1; r++) {
+                        Log.i("Wifi SSID", String.valueOf(wifiNetworks.get(r).SSID));
+                    }
+
+                }
+                else {
+                    Log.e("Wifi scan", "scan failed.");
+                }
+            }
+        };
+        IntentFilter intentFilterWifiScan = new IntentFilter();
+        intentFilterWifiScan.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+        getApplicationContext().registerReceiver(wifiScanReceiver, intentFilterWifiScan);
         textViewIP = findViewById(R.id.textViewIP);
         textViewIP.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -122,6 +151,9 @@ public class MainActivity extends Activity {
                     RunningDash runningDash = new RunningDash(display, ledStrip, ledColorsAr);
                     runningDash.execute();
                     Log.i("updateSecondSeconds", String.valueOf(updateSecondSeconds));
+                    long hours = updateSecondSeconds / 3600;
+                    long minutes = (updateSecondSeconds % 3600) / 60;
+                    textViewBottom.setText(String.format(Locale.ITALIAN, "Uptime %d hours %d minutes", hours, minutes));
                 }
 
                 try {
@@ -183,26 +215,16 @@ public class MainActivity extends Activity {
                 startActivity(perActivIntent);
             }
         });
-        buttonBrowser = findViewById(R.id.buttonBrowser);
-        buttonBrowser.setOnClickListener(new View.OnClickListener() {
+        buttonWifi = findViewById(R.id.buttonWifi);
+        buttonWifi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String url = "http://www.google.com";
-                CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder();
-                builder.setToolbarColor(000000);
-                builder.setShowTitle(true);
-
-                CustomTabsIntent customTabsIntent = builder.build();
-                try {
-                    customTabsIntent.launchUrl(MainActivity.this, Uri.parse(url));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                WifiSelectDialog wifiSelectDialog = WifiSelectDialog.newInstance("Select SSID");
+                wifiSelectDialog.show(getFragmentManager(), "Wifi SSID");
             }
         });
-
-        TextView tv = (TextView) findViewById(R.id.sample_text);
-        tv.setText(stringFromJNI());
+        textViewBottom = (TextView) findViewById(R.id.sample_text);
+        textViewBottom.setText(stringFromJNI());
 
     }
 
