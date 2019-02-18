@@ -55,7 +55,7 @@ import java.util.Locale;
  *
  * @see <a href="https://github.com/androidthings/contrib-drivers#readme">https://github.com/androidthings/contrib-drivers#readme</a>
  */
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements WifiSelectDialog.WifiDialogInterface {
 
     private TextView textViewIP;
     private TextView textViewBottom;
@@ -66,8 +66,8 @@ public class MainActivity extends Activity {
     private Handler updateSecondHandler;
     private Handler serverHandler;
     private WifiManager wifiManager;
-    private BroadcastReceiver wifiScanReceiver;
     private WifiConfiguration wifiConfig;
+    private BroadcastReceiver wifiScanReceiver;
     private AlphanumericDisplay display;
     private Bmx280 sensor;
     private Apa102 ledStrip;
@@ -100,11 +100,6 @@ public class MainActivity extends Activity {
                 boolean scanSuccess = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false);
                 if (scanSuccess) {
                     Log.d("Wifi scan", "scan successful.");
-                    List<ScanResult> wifiNetworks = wifiManager.getScanResults();
-                    for (int r = 0; r <= wifiNetworks.size() - 1; r++) {
-                        Log.i("Wifi SSID", String.valueOf(wifiNetworks.get(r).SSID));
-                    }
-
                 }
                 else {
                     Log.e("Wifi scan", "scan failed.");
@@ -219,8 +214,9 @@ public class MainActivity extends Activity {
         buttonWifi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                WifiSelectDialog wifiSelectDialog = WifiSelectDialog.newInstance("Select SSID");
-                wifiSelectDialog.show(getFragmentManager(), "Wifi SSID");
+                List<ScanResult> wifiNetworks = wifiManager.getScanResults();
+                WifiSelectDialog wifiSelectDialog = WifiSelectDialog.newInstance("Select SSID", wifiNetworks);
+                wifiSelectDialog.show(getFragmentManager(), "Select Wifi network");
             }
         });
         textViewBottom = (TextView) findViewById(R.id.sample_text);
@@ -411,6 +407,13 @@ public class MainActivity extends Activity {
             e.printStackTrace();
         }
         return ipAddressList;
+    }
+
+    @Override
+    public void onSsidSelected(String ssid) {
+        textViewBottom.setText(String.format("Selected SSID: %s", ssid));
+        wifiConfig = new WifiConfiguration();
+        wifiConfig.SSID = "\"" + ssid + "\"";
     }
 
     public static class RunningDash extends AsyncTask {
