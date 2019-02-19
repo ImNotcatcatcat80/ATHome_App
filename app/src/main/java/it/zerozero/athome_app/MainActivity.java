@@ -1,3 +1,16 @@
+/**
+ * ----------------------------------------------------------------------------------------------------
+     ___   .___________. __    __    ______   .___  ___.  _______          ___      .______   .______
+    /   \  |           ||  |  |  |  /  __  \  |   \/   | |   ____|        /   \     |   _  \  |   _  \
+   /  ^  \ `---|  |----`|  |__|  | |  |  |  | |  \  /  | |  |__          /  ^  \    |  |_)  | |  |_)  |
+  /  /_\  \    |  |     |   __   | |  |  |  | |  |\/|  | |   __|        /  /_\  \   |   ___/  |   ___/
+ /  _____  \   |  |     |  |  |  | |  `--'  | |  |  |  | |  |____      /  _____  \  |  |      |  |
+/__/     \__\  |__|     |__|  |__|  \______/  |__|  |__| |_______|____/__/     \__\ | _|      | _|
+                                                                |______|
+ * -----------------------------------------------------------------------------------------------------
+ Useless and weird, but I like it. Built on Android Things 1.05
+ David Girardello, 2017 - 2019
+*/
 package it.zerozero.athome_app;
 
 import android.app.Activity;
@@ -6,6 +19,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
@@ -55,7 +70,7 @@ import java.util.Locale;
  *
  * @see <a href="https://github.com/androidthings/contrib-drivers#readme">https://github.com/androidthings/contrib-drivers#readme</a>
  */
-public class MainActivity extends Activity implements WifiSelectDialog.WifiDialogInterface {
+public class MainActivity extends Activity implements WifiSelectDialog.WifiDialogInterface, WifiPassDialog.WifiPassInterface {
 
     private TextView textViewIP;
     private TextView textViewBottom;
@@ -65,6 +80,7 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
     private Runnable updateSecond;
     private Handler updateSecondHandler;
     private Handler serverHandler;
+    private String wifiSsid;
     private WifiManager wifiManager;
     private WifiConfiguration wifiConfig;
     private BroadcastReceiver wifiScanReceiver;
@@ -221,6 +237,19 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
         });
         textViewBottom = (TextView) findViewById(R.id.sample_text);
         textViewBottom.setText(stringFromJNI());
+        textViewBottom.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ConnectivityManager connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo wifiInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+                if(wifiInfo.isConnected()) {
+                    textViewBottom.setText("Wifi connected");
+                }
+                else {
+                    textViewBottom.setText("Wifi NOT connected");
+                }
+            }
+        });
 
     }
 
@@ -411,9 +440,30 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
 
     @Override
     public void onSsidSelected(String ssid) {
+        wifiSsid = ssid;
         textViewBottom.setText(String.format("Selected SSID: %s", ssid));
         wifiConfig = new WifiConfiguration();
         wifiConfig.SSID = "\"" + ssid + "\"";
+        WifiPassDialog wifiPassDialog = WifiPassDialog.newInstance(String.format("Pass for %s", ssid), ssid);
+        wifiPassDialog.show(getFragmentManager(), "Wifi Passkey");
+    }
+
+    @Override
+    public void onPassOk(String pass) {
+        // TODO: 19/02/2019 provide means of connecting to networks with no security
+        if(wifiConfig != null) {
+            wifiConfig.preSharedKey = "\"" + pass + "\"";
+            wifiManager.addNetwork(wifiConfig);
+            List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
+            for( WifiConfiguration c : list ) {
+                if(c.SSID != null && c.SSID.equals("\"" + wifiSsid + "\"")) {
+                    wifiManager.disconnect();
+                    wifiManager.enableNetwork(c.networkId, true);
+                    wifiManager.reconnect();
+                    break;
+                }
+            }
+        }
     }
 
     public static class RunningDash extends AsyncTask {
