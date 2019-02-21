@@ -1,16 +1,17 @@
 /**
- * ----------------------------------------------------------------------------------------------------
-     ___   .___________. __    __    ______   .___  ___.  _______          ___      .______   .______
-    /   \  |           ||  |  |  |  /  __  \  |   \/   | |   ____|        /   \     |   _  \  |   _  \
-   /  ^  \ `---|  |----`|  |__|  | |  |  |  | |  \  /  | |  |__          /  ^  \    |  |_)  | |  |_)  |
-  /  /_\  \    |  |     |   __   | |  |  |  | |  |\/|  | |   __|        /  /_\  \   |   ___/  |   ___/
- /  _____  \   |  |     |  |  |  | |  `--'  | |  |  |  | |  |____      /  _____  \  |  |      |  |
-/__/     \__\  |__|     |__|  |__|  \______/  |__|  |__| |_______|____/__/     \__\ | _|      | _|
-                                                                |______|
- * -----------------------------------------------------------------------------------------------------
- Useless and weird, but I like it. Built on Android Things 1.05
+ + ---------------------------------------------------------------- +
+ +     _  _____ _   _                             _                 +
+ +    / \|_   _| | | | ___  _ __ ___   ___       / \   _ __  _ __   +
+ +   / _ \ | | | |_| |/ _ \| '_ ` _ \ / _ \     / _ \ | '_ \| '_ \  +
+ +  / ___ \| | |  _  | (_) | | | | | |  __/    / ___ \| |_) | |_) | +
+ + /_/   \_\_| |_| |_|\___/|_| |_| |_|\___|___/_/   \_\ .__/| .__/  +
+ +                                       |_____|      |_|   |_|     +
+ + ---------------------------------------------------------------- +
+ Useless and weird, but I like it.
+ Built for Android Things 1.05 using JetBrains' Android Studio 3.2
  David Girardello, 2017 - 2019
 */
+
 package it.zerozero.athome_app;
 
 import android.app.Activity;
@@ -449,19 +450,45 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
     }
 
     @Override
+    public void onSsidAndSecSelected(String ssid, ScanResult result) {
+        wifiSsid = ssid;
+        textViewBottom.setText(String.format("Selected SSID: %s", ssid));
+        wifiConfig = new WifiConfiguration();
+        wifiConfig.SSID = String.format("\"%s\"", ssid);
+        if (result.capabilities.contains("WPA") || result.capabilities.contains("wpa")) {
+            if(result.capabilities.contains("EAP") || result.capabilities.contains("eap")) {
+                wifiConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_EAP);
+            }
+            if(result.capabilities.contains("PSK") || result.capabilities.contains("psk")) {
+                wifiConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+            }
+            WifiPassDialog wifiPassDialog = WifiPassDialog.newInstance(String.format("WPA key for %s", ssid), ssid);
+            wifiPassDialog.show(getFragmentManager(), "Wifi Passkey");
+        }
+        else if (result.capabilities.contains("NO") || result.capabilities.contains("no")) {
+            wifiConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+            connectWifi();
+        }
+        else {
+            Toast.makeText(this, "Cannot connect with this passkey security type.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
     public void onPassOk(String pass) {
-        // TODO: 19/02/2019 provide means of connecting to networks with no security
-        if(wifiConfig != null) {
-            wifiConfig.preSharedKey = "\"" + pass + "\"";
-            wifiManager.addNetwork(wifiConfig);
-            List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
-            for( WifiConfiguration c : list ) {
-                if(c.SSID != null && c.SSID.equals("\"" + wifiSsid + "\"")) {
-                    wifiManager.disconnect();
-                    wifiManager.enableNetwork(c.networkId, true);
-                    wifiManager.reconnect();
-                    break;
-                }
+        wifiConfig.preSharedKey = String.format("\"%s\"", pass);
+        connectWifi();
+    }
+
+    public void connectWifi() {
+        wifiManager.addNetwork(wifiConfig);
+        List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
+        for( WifiConfiguration c : list ) {
+            if(c.SSID != null && c.SSID.equals("\"" + wifiSsid + "\"")) {
+                wifiManager.disconnect();
+                wifiManager.enableNetwork(c.networkId, true);
+                wifiManager.reconnect();
+                break;
             }
         }
     }

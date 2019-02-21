@@ -47,7 +47,8 @@ public class WifiSelectDialog extends android.app.DialogFragment {
         builder.setTitle(title).setItems(ssidArray, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                listener.onSsidSelected(ssidArray[i]);
+                // listener.onSsidSelected(ssidArray[i]);
+                listener.onSsidAndSecSelected(ssidArray[i], networks.get(i));
             }
         });
 
@@ -67,6 +68,7 @@ public class WifiSelectDialog extends android.app.DialogFragment {
 
     public interface WifiDialogInterface {
         public void onSsidSelected(String ssid);
+        public void onSsidAndSecSelected(String ssid, ScanResult result);
     }
 
 }
