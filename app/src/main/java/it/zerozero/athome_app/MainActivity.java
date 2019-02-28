@@ -29,6 +29,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -47,8 +48,11 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Locale;
 
 /**
@@ -314,7 +318,7 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
                 @Override
                 public void onButtonEvent(com.google.android.things.contrib.driver.button.Button button, boolean pressed) {
                     if(pressed) {
-                        ScrollIp scrollIp = new ScrollIp();
+                        ScrollText scrollIp = new ScrollText("AT", "HOME", "APP", "/", "//", "///", "////");
                         scrollIp.execute();
                     }
                 }
@@ -585,7 +589,19 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
 
     }
 
-    public class ScrollIp extends AsyncTask {
+    public class ScrollText extends AsyncTask {
+
+        List<String> text2show;
+
+        public ScrollText(String... textsGroup) {
+            text2show = new ArrayList<>();
+            for(String t : textsGroup) {
+                if (t != null) {
+                    text2show.add(t);
+                }
+            }
+        }
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -600,20 +616,20 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
 
         @Override
         protected Object doInBackground(Object[] objects) {
-            if (displayIpAddress != null) {
-                Log.i("displayIpAddress", displayIpAddress);
-                String[] octet = displayIpAddress.split(".");
-                for(String o : octet) {
-                    Log.i("octet", o);
+            if (text2show != null && display != null) {
+                for(String s : text2show) {
+                    try {
+                        display.display(s);
+                        Thread.sleep(1000);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
             else {
-                Log.i("displayIpAddress", "null");
-            }
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                Log.i("ScrollText", "something is null.");
             }
             return null;
         }
@@ -631,6 +647,14 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
                     ledGreen.setValue(false);
                 } catch (IOException e) {
                     e.printStackTrace();
+                }
+            }
+            if(display != null) {
+                try {
+                    display.clear();
+                }
+                catch (IOException ioe) {
+                    ioe.printStackTrace();
                 }
             }
         }
