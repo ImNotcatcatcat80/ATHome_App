@@ -44,12 +44,19 @@ public class WifiSelectDialog extends android.app.DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         final String title = getArguments().getString("title");
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        builder.setTitle(title).setItems(ssidArray, new DialogInterface.OnClickListener() {
+        builder.setTitle(title)
+                .setItems(ssidArray, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 listener.onSsidSelected(ssidArray[i]);
             }
-        });
+        })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+
+                    }
+                });
 
         try {
             listener = (WifiDialogInterface) getContext();

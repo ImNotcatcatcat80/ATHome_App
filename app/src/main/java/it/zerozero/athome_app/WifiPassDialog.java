@@ -36,17 +36,11 @@ public class WifiPassDialog extends DialogFragment {
         fragmentView = inflater.inflate(R.layout.wifi_pass_dialog, null);
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(title);
-        builder.setView(R.layout.wifi_pass_dialog);
+        builder.setView(fragmentView);
         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 listener.onPassOk(editTextWifiPassword.getText().toString());
-            }
-        });
-        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-
             }
         });
 

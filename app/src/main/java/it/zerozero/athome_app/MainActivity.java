@@ -230,7 +230,18 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
         buttonWifi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                wifiManager.setWifiEnabled(true);
+
+                // Remove old configurations
+                List<WifiConfiguration> oldConfigs = wifiManager.getConfiguredNetworks();
+                for( WifiConfiguration i : oldConfigs ) {
+                    wifiManager.removeNetwork(i.networkId);
+                }
+
                 List<ScanResult> wifiNetworks = wifiManager.getScanResults();
+                for(ScanResult r : wifiNetworks) {
+                    Log.d("scanResult", r.SSID);
+                }
                 WifiSelectDialog wifiSelectDialog = WifiSelectDialog.newInstance("Select SSID", wifiNetworks);
                 wifiSelectDialog.show(getFragmentManager(), "Select Wifi network");
             }
@@ -443,19 +454,19 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
         wifiSsid = ssid;
         textViewBottom.setText(String.format("Selected SSID: %s", ssid));
         wifiConfig = new WifiConfiguration();
-        wifiConfig.SSID = "\"" + ssid + "\"";
+        wifiConfig.SSID = String.format("\"%s\"", ssid); // "\"" + ssid + "\"";
         WifiPassDialog wifiPassDialog = WifiPassDialog.newInstance(String.format("Pass for %s", ssid), ssid);
         wifiPassDialog.show(getFragmentManager(), "Wifi Passkey");
     }
 
     @Override
     public void onPassOk(String pass) {
-        // TODO: 19/02/2019 provide means of connecting to networks with no security
         if(wifiConfig != null) {
-            wifiConfig.preSharedKey = "\"" + pass + "\"";
+            wifiConfig.preSharedKey = String.format("\"%s\"", pass); // "\"" + pass + "\"";
             wifiManager.addNetwork(wifiConfig);
             List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
             for( WifiConfiguration c : list ) {
+                Log.d("Wifi conf list len", String.valueOf(list.size()));
                 if(c.SSID != null && c.SSID.equals("\"" + wifiSsid + "\"")) {
                     wifiManager.disconnect();
                     wifiManager.enableNetwork(c.networkId, true);
