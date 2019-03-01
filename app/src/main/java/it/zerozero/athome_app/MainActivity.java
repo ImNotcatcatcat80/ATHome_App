@@ -1,5 +1,5 @@
 /**
- * ----------------------------------------------------------------------------------------------------
+ * ----------------------------------------------------------------------------------------------------*
      ___   .___________. __    __    ______   .___  ___.  _______          ___      .______   .______
     /   \  |           ||  |  |  |  /  __  \  |   \/   | |   ____|        /   \     |   _  \  |   _  \
    /  ^  \ `---|  |----`|  |__|  | |  |  |  | |  \  /  | |  |__          /  ^  \    |  |_)  | |  |_)  |
@@ -7,10 +7,11 @@
  /  _____  \   |  |     |  |  |  | |  `--'  | |  |  |  | |  |____      /  _____  \  |  |      |  |
 /__/     \__\  |__|     |__|  |__|  \______/  |__|  |__| |_______|____/__/     \__\ | _|      | _|
                                                                 |______|
- * -----------------------------------------------------------------------------------------------------
- Useless and weird, but I like it. Built on Android Things 1.05
+ * -----------------------------------------------------------------------------------------------------*
+ Useless and weird, but I like it. Built on Android Things 1.03/1.09
  David Girardello, 2017 - 2019
 */
+
 package it.zerozero.athome_app;
 
 import android.app.Activity;
@@ -55,25 +56,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
 
-/**
- * Skeleton of an Android Things activity.
- * <p>
- * Android Things peripheral APIs are accessible through the class
- * PeripheralManagerService. For example, the snippet below will open a GPIO pin and
- * set it to HIGH:
- *
- * <pre>{@code
- * PeripheralManagerService service = new PeripheralManagerService();
- * mLedGpio = service.openGpio("BCM6");
- * mLedGpio.setDirection(Gpio.DIRECTION_OUT_INITIALLY_LOW);
- * mLedGpio.setValue(true);
- * }</pre>
- * <p>
- * For more complex peripherals, look for an existing user-space driver, or implement one if none
- * is available.
- *
- * @see <a href="https://github.com/androidthings/contrib-drivers#readme">https://github.com/androidthings/contrib-drivers#readme</a>
- */
+
 public class MainActivity extends Activity implements WifiSelectDialog.WifiDialogInterface, WifiPassDialog.WifiPassInterface {
 
     private TextView textViewIP;
@@ -318,8 +301,8 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
                 @Override
                 public void onButtonEvent(com.google.android.things.contrib.driver.button.Button button, boolean pressed) {
                     if(pressed) {
-                        ScrollText scrollIp = new ScrollText("AT", "HOME", "APP", "/", "//", "///", "////");
-                        scrollIp.execute();
+                        ScrollText scrollTxt = new ScrollText(1000,"AT", "HOME", "APP", "/", "//", "///", "////");
+                        scrollTxt.execute();
                     }
                 }
             });
@@ -592,14 +575,31 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
     public class ScrollText extends AsyncTask {
 
         List<String> text2show;
+        long delay = -1;
 
-        public ScrollText(String... textsGroup) {
+        public ScrollText(Long dly) {
+            delay = dly;
+            if (delay < 10) {
+                delay = 10;
+            }
+            text2show = new ArrayList<>();
+        }
+
+        public ScrollText(long dly, String... textsGroup) {
+            delay = dly;
             text2show = new ArrayList<>();
             for(String t : textsGroup) {
                 if (t != null) {
                     text2show.add(t);
                 }
             }
+        }
+
+        public void addText(String newTxt) {
+            if(delay < 10) {
+                text2show = new ArrayList<>();
+            }
+            text2show.add(newTxt);
         }
 
         @Override
@@ -620,7 +620,7 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
                 for(String s : text2show) {
                     try {
                         display.display(s);
-                        Thread.sleep(1000);
+                        Thread.sleep(delay);
                     } catch (IOException e) {
                         e.printStackTrace();
                     } catch (InterruptedException e) {

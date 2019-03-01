@@ -15,7 +15,7 @@ public class NsdHelper {
     NsdManager.DiscoveryListener mDiscoveryListener;
     NsdManager.ResolveListener mResolveListener;
     NsdManager.RegistrationListener mRegistrationListener;
-    public String mServiceName = "ATHome_App";
+    public String mServiceName = "ATHomeApp";
     public final String NSD_SERVICE_TYPE =  "_athomeapp._tcp";
 
     public NsdHelper(Context context) {
