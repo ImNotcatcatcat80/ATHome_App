@@ -30,8 +30,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.support.annotation.NonNull;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -39,8 +39,10 @@ import android.widget.Toast;
 
 import com.google.android.things.contrib.driver.apa102.Apa102;
 import com.google.android.things.contrib.driver.bmx280.Bmx280;
+import com.google.android.things.contrib.driver.button.ButtonInputDriver;
 import com.google.android.things.contrib.driver.ht16k33.AlphanumericDisplay;
 import com.google.android.things.contrib.driver.ht16k33.Ht16k33;
+import com.google.android.things.contrib.driver.pwmspeaker.Speaker;
 import com.google.android.things.contrib.driver.rainbowhat.RainbowHat;
 import com.google.android.things.pio.Gpio;
 import com.google.gson.Gson;
@@ -49,11 +51,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Locale;
 
 
@@ -72,6 +71,8 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
     private WifiConfiguration wifiConfig;
     private BroadcastReceiver wifiScanReceiver;
     private AlphanumericDisplay display;
+    private ButtonInputDriver keyA, keyS, keyD, keyF, keyG, keyH, keyJ, keyK;
+    private ButtonInputDriver keyQ, keyW, keyR, keyT, keyY;
     private Bmx280 sensor;
     private Apa102 ledStrip;
     private int[] ledColorsAr = new int[RainbowHat.LEDSTRIP_LENGTH];
@@ -79,6 +80,7 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
     private Gpio ledRed;
     private Gpio ledGreen;
     private Gpio ledBlue;
+    private Speaker pwmBuzzer;
     protected long updateSecondSeconds = 0;
     private static Thread serverThread;
     private NsdHelper nsdHelper;
@@ -296,6 +298,12 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
         }
 
         try {
+            pwmBuzzer = RainbowHat.openPiezo();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
             buttonB = RainbowHat.openButtonB();
             buttonB.setOnButtonEventListener(new com.google.android.things.contrib.driver.button.Button.OnButtonEventListener() {
                 @Override
@@ -308,6 +316,37 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
             });
         } catch (IOException e) {
             e.printStackTrace();
+        }
+
+        try {
+            keyA = RainbowHat.createButtonInputDriver("C5", KeyEvent.KEYCODE_A);
+            keyA.register();
+            keyQ = RainbowHat.createButtonInputDriver("C#5/Db5", KeyEvent.KEYCODE_Q);
+            keyQ.register();
+            keyS = RainbowHat.createButtonInputDriver("D5", KeyEvent.KEYCODE_S);
+            keyS.register();
+            keyW = RainbowHat.createButtonInputDriver("D#5/Eb5", KeyEvent.KEYCODE_W);
+            keyW.register();
+            keyD = RainbowHat.createButtonInputDriver("E5", KeyEvent.KEYCODE_D);
+            keyD.register();
+            keyF = RainbowHat.createButtonInputDriver("F5", KeyEvent.KEYCODE_F);
+            keyF.register();
+            keyR = RainbowHat.createButtonInputDriver("F#5/Gb5", KeyEvent.KEYCODE_R);
+            keyR.register();
+            keyG = RainbowHat.createButtonInputDriver("G5", KeyEvent.KEYCODE_G);
+            keyG.register();
+            keyT = RainbowHat.createButtonInputDriver("G#5/Ab5", KeyEvent.KEYCODE_T);
+            keyT.register();
+            keyH = RainbowHat.createButtonInputDriver("A5", KeyEvent.KEYCODE_H);
+            keyH.register();
+            keyY = RainbowHat.createButtonInputDriver("A#5/Bb5", KeyEvent.KEYCODE_Y);
+            keyY.register();
+            keyJ = RainbowHat.createButtonInputDriver("B5", KeyEvent.KEYCODE_J);
+            keyJ.register();
+            keyK = RainbowHat.createButtonInputDriver("C6", KeyEvent.KEYCODE_K);
+            keyK.register();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
         }
 
     }
@@ -368,6 +407,14 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
         }
 
         try {
+            pwmBuzzer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            pwmBuzzer = null;
+        }
+
+        try {
             buttonB.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -401,6 +448,64 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
             ledBlue = null;
             ledGreen = null;
         }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        try {
+            if(keyCode == KeyEvent.KEYCODE_A) {
+                pwmBuzzer.play(523.251);
+            }
+            if(keyCode == KeyEvent.KEYCODE_Q) {
+                pwmBuzzer.play(554.365);
+            }
+            if(keyCode == KeyEvent.KEYCODE_S) {
+                pwmBuzzer.play(587.33);
+            }
+            if(keyCode == KeyEvent.KEYCODE_W) {
+                pwmBuzzer.play(622.254);
+            }
+            if(keyCode == KeyEvent.KEYCODE_D) {
+                pwmBuzzer.play(659.255);
+            }
+            if(keyCode == KeyEvent.KEYCODE_F) {
+                pwmBuzzer.play(698.456);
+            }
+            if(keyCode == KeyEvent.KEYCODE_R) {
+                pwmBuzzer.play(739.989);
+            }
+            if(keyCode == KeyEvent.KEYCODE_G) {
+                pwmBuzzer.play(783.991);
+            }
+            if(keyCode == KeyEvent.KEYCODE_T) {
+                pwmBuzzer.play(830.609);
+            }
+            if(keyCode == KeyEvent.KEYCODE_H) {
+                pwmBuzzer.play(880.0);
+            }
+            if(keyCode == KeyEvent.KEYCODE_Y) {
+                pwmBuzzer.play(932.328);
+            }
+            if(keyCode == KeyEvent.KEYCODE_J) {
+                pwmBuzzer.play(987.767);
+            }
+            if(keyCode == KeyEvent.KEYCODE_K) {
+                pwmBuzzer.play(1046.5);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        try {
+            pwmBuzzer.stop();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return super.onKeyUp(keyCode, event);
     }
 
     public native String stringFromJNI();
