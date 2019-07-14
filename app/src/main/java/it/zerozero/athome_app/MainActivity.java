@@ -30,6 +30,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -62,7 +63,7 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
     private TextView textViewBottom;
     private Button buttonPerActiv;
     private Button buttonWifi;
-    private com.google.android.things.contrib.driver.button.Button buttonB;
+    private com.google.android.things.contrib.driver.button.Button buttonA, buttonB, buttonC;
     private Runnable updateSecond;
     private Handler updateSecondHandler;
     private Handler serverHandler;
@@ -77,9 +78,7 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
     private Apa102 ledStrip;
     private int[] ledColorsAr = new int[RainbowHat.LEDSTRIP_LENGTH];
     public final int WARM_WHITE = Color.rgb(72, 36, 6);
-    private Gpio ledRed;
-    private Gpio ledGreen;
-    private Gpio ledBlue;
+    private Gpio ledRed, ledGreen, ledBlue;
     private Speaker pwmBuzzer;
     protected long updateSecondSeconds = 0;
     private static Thread serverThread;
@@ -140,8 +139,8 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
                 updateSecondSeconds++;
 
                 try {
-                    if (ledBlue != null) {
-                        ledBlue.setValue(!ledBlue.getValue());
+                    if (ledRed != null) {
+                        ledRed.setValue(!ledRed.getValue());
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -160,7 +159,7 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
                     // String ipStr = android.text.format.Formatter.formatIpAddress(wifiManager.getConnectionInfo().getIpAddress());
                     // textViewIP.setText("WiFi IP: " + ipStr);
                     textViewIP.setText("");
-                    ArrayList<String> allIntfIPAddr = getIPAddresses(true);
+                    ArrayList<String> allIntfIPAddr = getIPAddresses(true, true);
                     for (String ifip : allIntfIPAddr) {
                         textViewIP.append(ifip + "\r\n");
                     }
@@ -260,7 +259,7 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
         updateSecondHandler.post(updateSecond);
 
         try {
-            ledBlue = RainbowHat.openLedBlue();
+            ledRed = RainbowHat.openLedRed();
             ledGreen = RainbowHat.openLedGreen();
         } catch (IOException e) {
             e.printStackTrace();
@@ -304,6 +303,22 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
         }
 
         try {
+            buttonA = RainbowHat.openButtonA();
+            buttonA.setOnButtonEventListener(new com.google.android.things.contrib.driver.button.Button.OnButtonEventListener() {
+                @Override
+                public void onButtonEvent(com.google.android.things.contrib.driver.button.Button button, boolean pressed) {
+                    if(pressed) {
+                        StringBuilder sb = new StringBuilder(getIPAddresses(true, false).get(0));
+                        String chunk0 = "IP";
+                        String chunk1 = sb.substring(0, 3);
+                        String chunk2 = sb.substring(4, 7);
+                        String chunk3 = sb.substring(8, 11);
+                        String chunk4 = sb.substring(12, 15);
+                        ScrollText scrollIp = new ScrollText(1000, chunk0, chunk1, chunk2, chunk3, chunk4);
+                        scrollIp.execute();
+                    }
+                }
+            });
             buttonB = RainbowHat.openButtonB();
             buttonB.setOnButtonEventListener(new com.google.android.things.contrib.driver.button.Button.OnButtonEventListener() {
                 @Override
@@ -314,41 +329,62 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
                     }
                 }
             });
+            buttonC = RainbowHat.openButtonC();
+            buttonC.setOnButtonEventListener(new com.google.android.things.contrib.driver.button.Button.OnButtonEventListener() {
+                @Override
+                public void onButtonEvent(com.google.android.things.contrib.driver.button.Button button, boolean pressed) {
+                    if(pressed) {
+                        try {
+                            pwmBuzzer.play(220);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    else {
+                        try {
+                            pwmBuzzer.stop();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        /**
         try {
-            keyA = RainbowHat.createButtonInputDriver("C5", KeyEvent.KEYCODE_A);
+            keyA = RainbowHat.createButtonInputDriver("key_A", KeyEvent.KEYCODE_A);
             keyA.register();
-            keyQ = RainbowHat.createButtonInputDriver("C#5/Db5", KeyEvent.KEYCODE_Q);
+            keyQ = RainbowHat.createButtonInputDriver("key_Q", KeyEvent.KEYCODE_Q);
             keyQ.register();
-            keyS = RainbowHat.createButtonInputDriver("D5", KeyEvent.KEYCODE_S);
+            keyS = RainbowHat.createButtonInputDriver("key_S", KeyEvent.KEYCODE_S);
             keyS.register();
-            keyW = RainbowHat.createButtonInputDriver("D#5/Eb5", KeyEvent.KEYCODE_W);
+            keyW = RainbowHat.createButtonInputDriver("key_W", KeyEvent.KEYCODE_W);
             keyW.register();
-            keyD = RainbowHat.createButtonInputDriver("E5", KeyEvent.KEYCODE_D);
+            keyD = RainbowHat.createButtonInputDriver("key_D", KeyEvent.KEYCODE_D);
             keyD.register();
-            keyF = RainbowHat.createButtonInputDriver("F5", KeyEvent.KEYCODE_F);
+            keyF = RainbowHat.createButtonInputDriver("key_F", KeyEvent.KEYCODE_F);
             keyF.register();
-            keyR = RainbowHat.createButtonInputDriver("F#5/Gb5", KeyEvent.KEYCODE_R);
+            keyR = RainbowHat.createButtonInputDriver("key_R", KeyEvent.KEYCODE_R);
             keyR.register();
-            keyG = RainbowHat.createButtonInputDriver("G5", KeyEvent.KEYCODE_G);
+            keyG = RainbowHat.createButtonInputDriver("key_G", KeyEvent.KEYCODE_G);
             keyG.register();
-            keyT = RainbowHat.createButtonInputDriver("G#5/Ab5", KeyEvent.KEYCODE_T);
+            keyT = RainbowHat.createButtonInputDriver("key_T", KeyEvent.KEYCODE_T);
             keyT.register();
-            keyH = RainbowHat.createButtonInputDriver("A5", KeyEvent.KEYCODE_H);
+            keyH = RainbowHat.createButtonInputDriver("key_H", KeyEvent.KEYCODE_H);
             keyH.register();
-            keyY = RainbowHat.createButtonInputDriver("A#5/Bb5", KeyEvent.KEYCODE_Y);
+            keyY = RainbowHat.createButtonInputDriver("key_Y", KeyEvent.KEYCODE_Y);
             keyY.register();
-            keyJ = RainbowHat.createButtonInputDriver("B5", KeyEvent.KEYCODE_J);
+            keyJ = RainbowHat.createButtonInputDriver("key_J", KeyEvent.KEYCODE_J);
             keyJ.register();
-            keyK = RainbowHat.createButtonInputDriver("C6", KeyEvent.KEYCODE_K);
+            keyK = RainbowHat.createButtonInputDriver("key_K", KeyEvent.KEYCODE_K);
             keyK.register();
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
-
+        */
     }
 
     @Override
@@ -366,9 +402,9 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
         updateSecondHandler.removeCallbacks(updateSecond);
 
         try {
-            if (ledBlue != null) {
-                ledBlue.setValue(false);
-                ledBlue.close();
+            if (ledRed != null) {
+                ledRed.setValue(false);
+                ledRed.close();
             }
             if (ledGreen != null) {
                 ledGreen.setValue(false);
@@ -407,6 +443,7 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
         }
 
         try {
+            pwmBuzzer.stop();
             pwmBuzzer.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -415,12 +452,36 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
         }
 
         try {
+            buttonA.close();
             buttonB.close();
+            buttonC.close();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
+            buttonA = null;
             buttonB = null;
+            buttonC = null;
         }
+
+        /**
+        try {
+            keyA.unregister();
+            keyQ.unregister();
+            keyS.unregister();
+            keyW.unregister();
+            keyD.unregister();
+            keyF.unregister();
+            keyR.unregister();
+            keyG.unregister();
+            keyT.unregister();
+            keyH.unregister();
+            keyY.unregister();
+            keyJ.unregister();
+            keyK.unregister();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+         */
 
         nsdHelper.tearDown();
     }
@@ -440,12 +501,12 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
         }
 
         try {
-            ledBlue.close();
+            ledRed.close();
             ledGreen.close();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            ledBlue = null;
+            ledRed = null;
             ledGreen = null;
         }
     }
@@ -510,7 +571,7 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
 
     public native String stringFromJNI();
 
-    public ArrayList<String> getIPAddresses(boolean useIPv4) {
+    public ArrayList<String> getIPAddresses(boolean useIPv4, boolean descriptive) {
         ArrayList<String> ipAddressList = new ArrayList<>();
         try {
             List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
@@ -526,10 +587,14 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
 
                         if (useIPv4) {
                             if (isIPv4)
-                                ipAddressList.add(String.format("%s has IP v4 %s", sIfName, sAddr));
+                                if (descriptive) {
+                                    ipAddressList.add(String.format("%s has IP v4 %s", sIfName, sAddr));
+                                } else {
+                                    ipAddressList.add(sAddr);
+                                }
                         } else {
                             if (!isIPv4) {
-                                ipAddressList.add("[IP v6 not supported]");
+                                ipAddressList.add("ERR IPv6");
                             }
                         }
                     }
