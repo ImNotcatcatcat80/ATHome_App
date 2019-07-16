@@ -308,14 +308,18 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
                 @Override
                 public void onButtonEvent(com.google.android.things.contrib.driver.button.Button button, boolean pressed) {
                     if(pressed) {
-                        StringBuilder sb = new StringBuilder(getIPAddresses(true, false).get(0));
-                        String chunk0 = "IP";
-                        String chunk1 = sb.substring(0, 3);
-                        String chunk2 = sb.substring(4, 7);
-                        String chunk3 = sb.substring(8, 11);
-                        String chunk4 = sb.substring(12, 15);
-                        ScrollText scrollIp = new ScrollText(1000, chunk0, chunk1, chunk2, chunk3, chunk4);
-                        scrollIp.execute();
+                        try {
+                            String ipString = getIPAddresses(true, false).get(0);
+                            Log.i("ipString", ipString);
+                            String[] chunks = ipString.split("\\.");
+                            String ip = "IP";
+                            ScrollText scrollIp = new ScrollText(1000, ip, chunks[0], chunks[1], chunks[2], chunks[3]);
+                            scrollIp.execute();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            ScrollText scrollIpErr = new ScrollText(1000, "IP", "Err");
+                            scrollIpErr.execute();
+                        }
                     }
                 }
             });
