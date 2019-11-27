@@ -357,7 +357,6 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
             e.printStackTrace();
         }
 
-        /**
         try {
             keyA = RainbowHat.createButtonInputDriver("key_A", KeyEvent.KEYCODE_A);
             keyA.register();
@@ -388,7 +387,7 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }
-        */
+
     }
 
     @Override
@@ -467,7 +466,6 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
             buttonC = null;
         }
 
-        /**
         try {
             keyA.unregister();
             keyQ.unregister();
@@ -485,7 +483,6 @@ public class MainActivity extends Activity implements WifiSelectDialog.WifiDialo
         } catch (Exception e) {
             e.printStackTrace();
         }
-         */
 
         nsdHelper.tearDown();
     }
